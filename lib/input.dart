@@ -136,6 +136,7 @@ class _InputPage extends State<InputRoute> {
   Week _selectedWeek;
   DateTime firstDayOfYear = new DateTime(DateTime.now().year);
   DateTime firstThursdayOfYear;
+  String _resultText = "";
   String countrySetting;
   FocusNode _focusNode;
   //controllers for text fields
@@ -175,13 +176,11 @@ class _InputPage extends State<InputRoute> {
   TextEditingController wed4 = TextEditingController();
   TextEditingController wed5 = TextEditingController();
 
-  double calcFieldSize()
-  {
+  double calcFieldSize() {
       return  MediaQuery. of(context).size.width / 6.6;
   }
 
-  double calcMargin()
-  {
+  double calcMargin() {
       return MediaQuery. of(context).size.width / 80.0;
   }
 
@@ -297,6 +296,21 @@ class _InputPage extends State<InputRoute> {
 
     return weekItems;
   }
+  String getResultText(){
+     return _resultText;
+  }
+  void resetSnackbarText(int aantal) {
+     var text = aantal.toString() + " records added to Database";
+     if (aantal > 0)
+        _resultText = text;
+     else
+       _resultText = "";
+     setState(() {
+       Week w = _selectedWeek;
+       _selectedWeek = null;
+       _selectedWeek = w;
+     });
+  }
 
   void saveToDatabase()  {
      DateTime getNextDate(DateTime d)
@@ -363,16 +377,8 @@ class _InputPage extends State<InputRoute> {
         )
      {
        var date = _selectedWeek.DateFrom;
-
-       log('selected city is: ' + _selectedCity.city + " (" +
-           _selectedCity.stadID + ")");
-       log('selected film is: ' + _selectedCinema.cinema_title + " (" +
-           _selectedCinema.cinemaID + ")");
-       log('selected film is: ' + _selectedFilm.film_title + " (" +
-           _selectedFilm.filmID + ")");
-       log('selected week is: ' + _selectedWeek.WeekNumber);
-       log (" Datum = " + date.toString());
        int aant = 0;
+       int aantSucces = 0;
        // loop door alle textcontrollers heen; als de waarde niet null is, dan moet er een regel in de database worden toegevoegd
        for (int i = 1; i <= 7; i++) {
          for (int j = 1; j <= 5; j++) {
@@ -383,6 +389,19 @@ class _InputPage extends State<InputRoute> {
              Planning plan;
              plan =  Planning.fromNew (_selectedFilm.filmID, _selectedCinema.cinemaID, cineDateTime);
              Future<bool> futureSucces = insertPlanning(plan);
+             futureSucces..then((value) {
+               aantSucces++;
+               resetSnackbarText(aantSucces);
+               setState(() {
+               Week w = _selectedWeek;
+               _selectedWeek = null;
+               _selectedWeek = w;
+               });
+             },
+                 onError: (e) {
+             //  handleError(e);
+             }
+             );
            }
          }
          date = getNextDate(date);
@@ -397,15 +416,24 @@ class _InputPage extends State<InputRoute> {
        }
        else
        {
-          log(aant.toString() + " tijden opgeslagen");
+          log(aant.toString() + " tijden verstuurd");
        }
+
+       new Timer(new Duration(milliseconds:5000), ()
+       {
+         resetSnackbarText(0);
+         setState(() {
+         });
+       });
+
+
      }
      else
      {
         // TODO: foutafhandeling
         log("Selecteer eerst een bioscoop, een film en een week");
      }
-  }
+   }
 
   TextEditingController getController (int day, int fieldno)  {
      if (day == 1)
@@ -633,7 +661,8 @@ class _InputPage extends State<InputRoute> {
           )
         ],
       ),
-      body:   SingleChildScrollView(
+      body:
+      SingleChildScrollView(
         child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -668,8 +697,8 @@ class _InputPage extends State<InputRoute> {
                     items: _dropDownCityItems,
                     onChanged: (value)
                     {
+                      _selectedCinema = null;
                       _selectedCity = value;
-                      //TODO: error bij het selecteren van een andere stad; gaat niet goed bij het opnieuw opbouwen van de CinemaItems dropdownlijst
                       _dropDownCinemaItems = buildDropDownCinemaItems();
                       new Timer(new Duration(milliseconds:1000), ()
                       {
@@ -865,15 +894,23 @@ class _InputPage extends State<InputRoute> {
                   label: Text('Copy'),
                 ),
               )
-
             ],
           ),
+              Row(
+                children: <Widget>[
+                  Text(getResultText(),
+                      style: TextStyle(
+                          color: Colors.purple, fontWeight: FontWeight.w900)),
+                ],
+              ),
         ],
       ),
      ),
+
     );
   }
 }
+
 
 List<City> parseCities (String responseBody) {
    final parsed = jsonDecode(responseBody).cast<Map<String, dynamic>>();
@@ -919,15 +956,19 @@ Future<bool> insertPlanning(Planning _planning) async {
           "cinemaID": _planning.cinemaID,
           "dtBegin": _planning.dtBegin.toString()
         });
+        if (response.body != "true" )
+           return false;
+        else
+           return true;
   }
   else
   {
      //TODO PHP get  voor bestaande planning and PUT commando voor update
-
+     return true;
   }
   // TODO: bevestiging naar gebruiker bij succes
   // TODO: response bij fouten ophalen en afhandelen
-  return true;
+
 }
 
 
