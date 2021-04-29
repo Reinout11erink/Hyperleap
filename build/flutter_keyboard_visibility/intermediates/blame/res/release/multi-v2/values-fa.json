@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "C:\\Users\\Reino\\Desktop\\Git\\manual_data_input_hyperleap\\build\\flutter_keyboard_visibility\\intermediates\\res\\merged\\release\\values-fa\\values-fa.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Reino\\.gradle\\caches\\transforms-2\\files-2.1\\6c27f35847982eae0adb54575ac410ba\\core-1.5.0-beta01\\res\\values-fa\\values-fa.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "100",
+                        "endOffsets": "151"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "C:\\Users\\Reino\\Desktop\\Git\\manual_data_input_hyperleap\\build\\flutter_keyboard_visibility\\intermediates\\incremental\\mergeReleaseResources\\merged.dir\\values-fa\\values-fa.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Reino\\.gradle\\caches\\transforms-2\\files-2.1\\6c27f35847982eae0adb54575ac410ba\\core-1.5.0-beta01\\res\\values-fa\\values-fa.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "100",
+                        "endOffsets": "151"
+                    }
+                }
+            ]
+        }
+    ]
+}
