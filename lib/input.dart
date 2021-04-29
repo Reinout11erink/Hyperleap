@@ -175,6 +175,15 @@ class _InputPage extends State<InputRoute> {
   TextEditingController wed4 = TextEditingController();
   TextEditingController wed5 = TextEditingController();
 
+  double calcFieldSize()
+  {
+      return  MediaQuery. of(context).size.width / 6.6;
+  }
+
+  double calcMargin()
+  {
+      return MediaQuery. of(context).size.width / 80.0;
+  }
 
   List<DropdownMenuItem<City>> buildDropDownCityItems() {
     List<DropdownMenuItem<City>> items = new List<DropdownMenuItem<City>>();
@@ -543,9 +552,9 @@ class _InputPage extends State<InputRoute> {
     }
 
     return Container(
-        margin: EdgeInsets.all(7.0),
+        margin: EdgeInsets.all(calcMargin()),
 //        alignment: Alignment.center,
-        width: 59.0,
+        width: calcFieldSize(),
         height: 23.0,
         color: Colors.white,
         child: TextFormField(
@@ -812,7 +821,7 @@ class _InputPage extends State<InputRoute> {
 
 
               Container(
-                margin: EdgeInsets.all(10.0),
+                margin: EdgeInsets.all(calcMargin()),
                 child: FloatingActionButton.extended(
                   heroTag: "Save",
                   shape: RoundedRectangleBorder(
@@ -823,11 +832,11 @@ class _InputPage extends State<InputRoute> {
                     saveToDatabase();
                   },
                   icon: Icon(Icons.add),
-                  label: Text('Submit'),
+                  label: Text('Save'),
                 ),
               ),
               Container(
-                margin: EdgeInsets.all(10.0),
+                margin: EdgeInsets.all(calcMargin()),
                 child: FloatingActionButton.extended(
                   heroTag: "Clear",
                   shape: RoundedRectangleBorder(
@@ -842,7 +851,7 @@ class _InputPage extends State<InputRoute> {
                 ),
               ),
               Container(
-                margin: EdgeInsets.all(10.0),
+                margin: EdgeInsets.all(calcMargin()),
                 child: FloatingActionButton.extended(
                   heroTag: "Copy",
                   shape: RoundedRectangleBorder(
