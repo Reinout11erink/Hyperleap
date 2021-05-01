@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
+import 'settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
@@ -123,7 +123,9 @@ class Week {
   }
 }
 
-class _InputPage extends State<InputRoute> {
+SharedPreferences _myPrefs;
+
+class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
   final myController = TextEditingController();
   List<DropdownMenuItem<City>> _dropDownCityItems;
   City _selectedCity;
@@ -136,8 +138,9 @@ class _InputPage extends State<InputRoute> {
   Week _selectedWeek;
   DateTime firstDayOfYear = new DateTime(DateTime.now().year);
   DateTime firstThursdayOfYear;
+  DateTime errorDate = new DateTime(1900);
   String _resultText = "";
-  String countrySetting;
+  String countrySetting = "NL";
   FocusNode _focusNode;
   //controllers for text fields
   TextEditingController thu1 = TextEditingController();
@@ -194,7 +197,7 @@ class _InputPage extends State<InputRoute> {
        });
     }
     handleError(Error _e){
-      log("Error bij ophalen films");
+      ShowErrorMessage("Error retrieving films from database: " + _e.toString());
     }
 
     Future<List<City>> futurejsonList = getCities(countrySetting);
@@ -205,6 +208,46 @@ class _InputPage extends State<InputRoute> {
     return items;
   }
 
+  void getPrefs () async {
+    _myPrefs = await SharedPreferences.getInstance();
+  }
+
+
+
+  void resetCountry()  {
+    // TODO: functie komt hier wel, maar doet het nog niet goed
+    log ("InitialCountrySetting" + countrySetting);
+    String curCountryString = countrySetting;
+    log("CurCountry" + curCountryString);
+    countrySetting = _myPrefs.getString('currentCountry') ?? "NL";
+    log ("CountrySetting na prefs" + countrySetting);
+
+    if (curCountryString != countrySetting) {
+        _selectedCinema = null;
+        _selectedCity = null;
+        _dropDownCityItems = null;
+        _dropDownCinemaItems = null;
+        _dropDownCityItems = buildDropDownCityItems();
+        new Timer(new Duration(milliseconds:1000), ()
+        {
+          setState(() {
+            Week w = _selectedWeek;
+            _selectedWeek = null;
+            _selectedWeek = w;
+          });
+        });
+        log ("reset " + countrySetting);
+    }
+    else
+       log ("No reset " + countrySetting);
+  }
+
+  void goToSettings() async {
+    var result = await Navigator.pushNamed(context, 'settings');
+    if (result == 'fromSettings') {
+       resetCountry();
+    }
+  }
   List<DropdownMenuItem<Cinema>> buildDropDownCinemaItems() {
     List<DropdownMenuItem<Cinema>> cinemaItems = new List<DropdownMenuItem<Cinema>>();
     makeList(List<Cinema> cinemas) {
@@ -296,10 +339,12 @@ class _InputPage extends State<InputRoute> {
 
     return weekItems;
   }
+
   String getResultText(){
      return _resultText;
   }
-  void resetSnackbarText(int aantal) {
+
+  void ShowMessage(int aantal) {
      var text = aantal.toString() + " records added to Database";
      if (aantal > 0)
         _resultText = text;
@@ -310,6 +355,15 @@ class _InputPage extends State<InputRoute> {
        _selectedWeek = null;
        _selectedWeek = w;
      });
+  }
+
+  void ShowErrorMessage(String message) {
+     _resultText = message;
+    setState(() {
+      Week w = _selectedWeek;
+      _selectedWeek = null;
+      _selectedWeek = w;
+    });
   }
 
   void saveToDatabase()  {
@@ -350,7 +404,6 @@ class _InputPage extends State<InputRoute> {
             mm = num.tryParse(smm);
          }
          hh = num.tryParse(shh);
-         log (" conv hh: " + hh.toString());
          if (hh != null && mm != null && hh <= 23 && mm <= 59)
          {
            if (hh <= 2)
@@ -365,7 +418,7 @@ class _InputPage extends State<InputRoute> {
          }
          else
          {
-            // TODO: error
+            return errorDate;
          }
          return d;
      }
@@ -385,23 +438,43 @@ class _InputPage extends State<InputRoute> {
            tc = getController(i, j);
            if (tc.text != null && tc.text != "") {
              DateTime cineDateTime = getCineDateTime(date, tc.text);
-             aant++;
-             Planning plan;
-             plan =  Planning.fromNew (_selectedFilm.filmID, _selectedCinema.cinemaID, cineDateTime);
-             Future<bool> futureSucces = insertPlanning(plan);
-             futureSucces..then((value) {
-               aantSucces++;
-               resetSnackbarText(aantSucces);
-               setState(() {
-               Week w = _selectedWeek;
-               _selectedWeek = null;
-               _selectedWeek = w;
-               });
-             },
-                 onError: (e) {
-             //  handleError(e);
+             if (cineDateTime != errorDate) {
+               aant++;
+               Planning plan;
+               plan = Planning.fromNew(
+                   _selectedFilm.filmID, _selectedCinema.cinemaID,
+                   cineDateTime);
+               Future<bool> futureSucces = insertPlanning(plan);
+               futureSucces
+                 ..then((value)
+                 {
+                    if (value == true)
+                    {
+                       aantSucces++;
+                       ShowMessage(aantSucces);
+                       setState(()
+                       {
+                          Week w = _selectedWeek;
+                          _selectedWeek = null;
+                          _selectedWeek = w;
+                       });
+                    }
+                    else
+                    {
+                      ShowErrorMessage("Error on saving to database");
+                    }
+                 },
+                    onError: (e)
+                    {
+                       ShowErrorMessage("Error on saving to database: " + e.toString());
+                    }
+                 );
+
              }
-             );
+             else {
+               ShowErrorMessage("Not a valid time");
+             }
+
            }
          }
          date = getNextDate(date);
@@ -412,27 +485,19 @@ class _InputPage extends State<InputRoute> {
        }
        if (aant == 0)
        {
-          log("Geen tijden ingevuld: er is niets opgeslagen");
+          ShowErrorMessage("No times entered: nothing was saved");
        }
-       else
-       {
-          log(aant.toString() + " tijden verstuurd");
-       }
-
-       new Timer(new Duration(milliseconds:5000), ()
-       {
-         resetSnackbarText(0);
-         setState(() {
-         });
-       });
-
-
      }
      else
      {
-        // TODO: foutafhandeling
-        log("Selecteer eerst een bioscoop, een film en een week");
+       ShowErrorMessage("Select a cinema and film first");
      }
+     new Timer(new Duration(milliseconds:5000), ()
+     {
+       ShowMessage(0);
+       setState(() {
+       });
+     });
    }
 
   TextEditingController getController (int day, int fieldno)  {
@@ -605,8 +670,9 @@ class _InputPage extends State<InputRoute> {
 
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // TODO: Setting ophalen uit settings voor land (Nederland NL of Belgie BE), voor nu even hardgecodeerd Kop NL
-    countrySetting = "NL";
+    getPrefs();
     firstThursdayOfYear= new DateTime( firstDayOfYear.year, 1, 5 - firstDayOfYear.weekday);
     _dropDownWeekItems = getWeekList();
     _dropDownCityItems = buildDropDownCityItems();
@@ -633,10 +699,21 @@ class _InputPage extends State<InputRoute> {
         _selectedWeek = w;
       });
     });
-
    }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if(state == AppLifecycleState.resumed){
+      log ('Change State');
+      resetCountry();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -656,7 +733,7 @@ class _InputPage extends State<InputRoute> {
               color: Colors.black,
             ),
             onPressed: () {
-              Navigator.pushNamed(context, 'settings');
+              goToSettings();
             },
           )
         ],
@@ -737,8 +814,6 @@ class _InputPage extends State<InputRoute> {
                   Text(' Film Title ',
                       style: TextStyle(
                           color: Colors.purple, fontWeight: FontWeight.w900)),
-
-    // TODO: toevoegen input veld dat op basis van de input een suggestie doet uit de lijst met films
                   DropdownButton<Film>(
                     value: _selectedFilm,
                     items: _dropDownFilmItems,
@@ -906,9 +981,12 @@ class _InputPage extends State<InputRoute> {
         ],
       ),
      ),
-
     );
   }
+
+
+
+
 }
 
 
@@ -956,19 +1034,20 @@ Future<bool> insertPlanning(Planning _planning) async {
           "cinemaID": _planning.cinemaID,
           "dtBegin": _planning.dtBegin.toString()
         });
-        if (response.body != "true" )
-           return false;
-        else
-           return true;
+    if (response.body != "true") {
+      return false;
+    }
+    else {
+      return true;
+    }
   }
   else
   {
-     //TODO PHP get  voor bestaande planning and PUT commando voor update
+     //TODO PHP get voor bestaande planning and PUT commando voor update
      return true;
   }
-  // TODO: bevestiging naar gebruiker bij succes
-  // TODO: response bij fouten ophalen en afhandelen
-
 }
+
+
 
 
