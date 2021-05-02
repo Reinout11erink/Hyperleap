@@ -189,6 +189,10 @@ class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
 
   List<DropdownMenuItem<City>> buildDropDownCityItems() {
     List<DropdownMenuItem<City>> items = new List<DropdownMenuItem<City>>();
+    if (_dropDownCityItems != null)
+    {
+       items = _dropDownCityItems;
+    }
     makeList(List<City> cities)
     {
         int i = 0;
@@ -201,8 +205,14 @@ class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
     }
 
     Future<List<City>> futurejsonList = getCities(countrySetting);
-//    List<City> citylist;
-    futurejsonList..then((value) { makeList(value);},
+    futurejsonList..then
+    (  (value)        { makeList(value);
+                        setState(()
+                        {  Week w = _selectedWeek;
+                           _selectedWeek = null;
+                           _selectedWeek = w;
+                        });
+                      },
         onError:  (e) { handleError(e); }
     );
     return items;
@@ -216,31 +226,19 @@ class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
 
   void resetCountry()  {
     // TODO: functie komt hier wel, maar doet het nog niet goed
-    log ("InitialCountrySetting" + countrySetting);
     String curCountryString = countrySetting;
-    log("CurCountry" + curCountryString);
     countrySetting = _myPrefs.getString('currentCountry') ?? "NL";
-    log ("CountrySetting na prefs" + countrySetting);
 
     if (curCountryString != countrySetting) {
         _selectedCinema = null;
+        if (_dropDownCinemaItems != null)
+           _dropDownCinemaItems.clear();
         _selectedCity = null;
-        _dropDownCityItems = null;
-        _dropDownCinemaItems = null;
+        if (_dropDownCityItems != null)
+           _dropDownCityItems.clear();
         _dropDownCityItems = buildDropDownCityItems();
-        new Timer(new Duration(milliseconds:1000), ()
-        {
-          setState(() {
-            Week w = _selectedWeek;
-            _selectedWeek = null;
-            _selectedWeek = w;
-          });
-        });
-        log ("reset " + countrySetting);
     }
-    else
-       log ("No reset " + countrySetting);
-  }
+ }
 
   void goToSettings() async {
     var result = await Navigator.pushNamed(context, 'settings');
@@ -248,17 +246,16 @@ class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
        resetCountry();
     }
   }
+
   List<DropdownMenuItem<Cinema>> buildDropDownCinemaItems() {
     List<DropdownMenuItem<Cinema>> cinemaItems = new List<DropdownMenuItem<Cinema>>();
     makeList(List<Cinema> cinemas) {
       cinemas.forEach((Cinema _cinema) {
          cinemaItems.add( DropdownMenuItem(child: Text(_cinema.cinema_title), value: _cinema),);
-        //        log (' items' + items[index].child.toString());
-        //        index += 1;
       });
     }
     handleError(Error e){
-       log("Error bij ophalen cinema's");
+       ShowErrorMessage("Error retrieving the cinemas");
      }
     Future<List<Cinema>> futurejsonList = getCinemas(_selectedCity.stadID);
     futurejsonList..then((value) {
@@ -285,7 +282,7 @@ class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
         });
     }
     handleError(Error _e){
-      log("Error bij ophalen films");
+      ShowErrorMessage("Error retrieving the films");
     }
     Future<List<Film>> futureJsonList = getFilms();
     futureJsonList..then((value) { makeList(value);
@@ -612,7 +609,6 @@ class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
     for (int i = 1; i <= 5; i++)
     {
       tcOrig = getController(1, i);
-      log(tcOrig.text);
       for (int j = 2; j <= 7; j++)
       {
          if (tcOrig.text != null && tcOrig.text != "")
@@ -710,7 +706,6 @@ class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if(state == AppLifecycleState.resumed){
-      log ('Change State');
       resetCountry();
     }
   }
@@ -983,6 +978,8 @@ class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
      ),
     );
   }
+
+
 
 
 

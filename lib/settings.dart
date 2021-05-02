@@ -105,8 +105,7 @@ class _SettingsPage extends State<SettingsRoute> {
     _myPrefs = await SharedPreferences.getInstance();
 // TODO: als de prefs al op Belgie staan, dan de Belgie knop activeren
     String mySetting = _myPrefs.getString('currentCountry') ?? "Geen";
-    log (mySetting);
-  }
+   }
 
 
   void _switchCountry() async {
@@ -114,15 +113,12 @@ class _SettingsPage extends State<SettingsRoute> {
     if (_countryChoice == COUNTRY.NE)
     {
       print('current country is the Netherlands');
-      await prefs.setString('currentCountry', 'NE');
+      await prefs.setString('currentCountry', 'NL');
     }
     else if  (_countryChoice == COUNTRY.BE)
     {
-      print('current country is  Belgium');
       await prefs.setString('currentCountry', 'BE');
     }
-    String mySetting = prefs.getString('currentCountry') ?? "Geen";
-    log (mySetting);
   }
 
   // void _toggleAvailiablity() async {
