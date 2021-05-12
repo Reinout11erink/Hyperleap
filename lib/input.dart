@@ -220,12 +220,14 @@ class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
 
   void getPrefs () async {
     _myPrefs = await SharedPreferences.getInstance();
+    if (_myPrefs == 'BE')
+    {
+        countrySetting = "BE";
+    }
+    _dropDownCityItems = buildDropDownCityItems();
   }
 
-
-
   void resetCountry()  {
-    // TODO: functie komt hier wel, maar doet het nog niet goed
     String curCountryString = countrySetting;
     countrySetting = _myPrefs.getString('currentCountry') ?? "NL";
 
@@ -667,11 +669,9 @@ class _InputPage extends State<InputRoute>  with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // TODO: Setting ophalen uit settings voor land (Nederland NL of Belgie BE), voor nu even hardgecodeerd Kop NL
     getPrefs();
     firstThursdayOfYear= new DateTime( firstDayOfYear.year, 1, 5 - firstDayOfYear.weekday);
     _dropDownWeekItems = getWeekList();
-    _dropDownCityItems = buildDropDownCityItems();
     _dropDownFilmItems = getFilmList();
     new Timer(new Duration(milliseconds:10), ()
     {

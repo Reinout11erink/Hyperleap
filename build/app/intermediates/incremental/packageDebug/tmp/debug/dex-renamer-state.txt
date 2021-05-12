@@ -1,4 +1,4 @@
-#Thu Apr 29 20:46:58 CEST 2021
+#Wed May 12 19:56:13 CEST 2021
 base.0=C\:\\Users\\Reino\\Desktop\\Git\\manual_data_input_hyperleap\\build\\app\\intermediates\\dex\\debug\\mergeDexDebug\\out\\classes.dex
 path.0=classes.dex
 renamed.0=classes.dex

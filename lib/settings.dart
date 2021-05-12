@@ -15,11 +15,6 @@ COUNTRY _countryChoice = COUNTRY.NE;
 SharedPreferences _myPrefs;
 
 class _SettingsPage extends State<SettingsRoute> {
-  @override
-  void InitState()
-  {
-      getPrefs();
-  }
 
   @override
   Widget build(BuildContext context){
@@ -101,14 +96,9 @@ class _SettingsPage extends State<SettingsRoute> {
     );
   }
 
-  void getPrefs () async {
-    _myPrefs = await SharedPreferences.getInstance();
-// TODO: als de prefs al op Belgie staan, dan de Belgie knop activeren
-    String mySetting = _myPrefs.getString('currentCountry') ?? "Geen";
-   }
 
 
-  void _switchCountry() async {
+   void _switchCountry() async {
     final prefs = await SharedPreferences.getInstance();
     if (_countryChoice == COUNTRY.NE)
     {
@@ -139,6 +129,5 @@ class _SettingsPage extends State<SettingsRoute> {
   void _logout() {
     //TODO  logout
   }
-  String country;
 
 }
